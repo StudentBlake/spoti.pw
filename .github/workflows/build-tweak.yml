@@ -1,0 +1,42 @@
+name: Build spoti.pw tweak (.deb only, rootless)
+
+on:
+  workflow_dispatch:
+
+env:
+  THEOS: ${{ github.workspace }}/theos
+  THEOS_PACKAGE_SCHEME: rootless
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout tweak source
+        uses: actions/checkout@v5
+
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Checkout Theos
+        uses: actions/checkout@v5
+        with:
+          repository: theos/theos
+          path: theos
+          submodules: recursive
+
+      - name: Install build tools
+        run: brew install make dpkg ldid
+
+      - name: Build rootless .deb (no target IPA)
+        run: |
+          export PATH="$THEOS/bin:$PATH"
+          make clean
+          make package FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=rootless
+
+      - name: Upload .deb
+        uses: actions/upload-artifact@v5
+        with:
+          name: spoti-pw-tweak-deb
+          path: packages/*.deb
+          if-no-files-found: error
