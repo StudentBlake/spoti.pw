@@ -363,7 +363,7 @@ static SGTourRow *actionRow(NSString *symbol, NSString *title, NSString *subtitl
     lyricsOnly.changed = ^(BOOL on) { SGSetPlayerLyricsOnly(on); };
     [pages addObject:[self pageWithSymbol:@"rectangle.compress.vertical" heading:@"Declutter." body:@"The player, down to the music. Every piece has a switch of its own under Player in Mod Settings." rows:@[lyricsOnly]]];
     [pages addObject:[self navbarPage]];
-    [pages addObject:[self pageWithSymbol:@"slider.horizontal.3" heading:@"Everything lives in Mod Settings." body:@"First row of the side drawer behind your avatar, and the last row of Spotify's Settings. Every switch, the tab bar editor and all of Spotify's flags.\n\nFree and open source. A star is what keeps it going." rows:@[
+    [pages addObject:[self pageWithSymbol:@"slider.horizontal.3" heading:@"Everything lives in Mod Settings." body:@"Hold Home on the tab bar to open it from anywhere. It is also the first row of the side drawer behind your avatar, and the last row of Spotify's Settings. Every switch, the tab bar editor and all of Spotify's flags.\n\nFree and open source. A star is what keeps it going." rows:@[
         actionRow(@"star.fill", @"Star on GitHub", @"skopevoj/spoti.pw", ^{ SGOpenURL(SGRepoURL); }),
         actionRow(@"square.and.arrow.up", @"Share spoti.pw", @"Send the site to someone", ^{ [weakSelf share]; }),
     ]]];

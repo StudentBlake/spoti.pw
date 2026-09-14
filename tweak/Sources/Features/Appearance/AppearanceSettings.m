@@ -35,7 +35,7 @@ SGModSection *SGAppearanceSection(void) {
     glass.changed = ^(BOOL on) { SGSetLiquidGlassUI(on); };
     return SGNotedSection(@"Appearance", @[
         SGWithSymbol(glass, @"drop"),
-        SGWithSymbol(SGOptionRow(@"AMOLED background", @"Pure black instead of Spotify's dark grey", SGKeyAmoled), @"moon"),
-        SGWithSymbol(SGStatActionRow(@"Accent colour", @"In place of Spotify's green, everywhere it is drawn", ^NSString *{ return SGAccentLabel(); }, ^{ chooseAccent(); }), @"paintpalette"),
+        SGWithSymbol(SGOptionRow(@"AMOLED background", nil, SGKeyAmoled), @"moon"),
+        SGWithSymbol(SGStatActionRow(@"Accent colour", nil, ^NSString *{ return SGAccentLabel(); }, ^{ chooseAccent(); }), @"paintpalette"),
     ], @"Liquid Glass UI turns every glass switch of the mod's on or off with it. Changes apply after you restart Spotify.");
 }

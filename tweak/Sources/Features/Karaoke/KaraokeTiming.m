@@ -66,7 +66,7 @@ static SGKaraokeLine *timedLine(NSString *text, NSInteger start, NSInteger gap) 
     return line;
 }
 
-static NSArray<SGKaraokeLine *> *timedLines(NSArray<NSNumber *> *starts, NSArray<NSString *> *texts) {
+NSArray<SGKaraokeLine *> *SGKaraokeEstimatedLines(NSArray<NSNumber *> *starts, NSArray<NSString *> *texts) {
     NSMutableArray<SGKaraokeLine *> *lines = [NSMutableArray array];
     for (NSUInteger i = 0; i < texts.count; i++) {
         if (isBreak(texts[i])) continue;
@@ -91,7 +91,7 @@ static NSArray<SGKaraokeLine *> *fromProtobuf(NSData *body) {
         [starts addObject:@((int32_t)SGPBFirst(line, 1).varint)];
         [texts addObject:SGPBText(SGPBFirst(line, 2)) ?: @""];
     }
-    return timedLines(starts, texts);
+    return SGKaraokeEstimatedLines(starts, texts);
 }
 
 // { "lyrics": { "syncType": "LINE_SYNCED", "lines": [ { "startTimeMs": "1234", "words": "..." } ] } }
@@ -107,7 +107,7 @@ static NSArray<SGKaraokeLine *> *fromJSON(NSData *body) {
         [starts addObject:@([line[@"startTimeMs"] integerValue])];
         [texts addObject:[words isKindOfClass:NSString.class] ? words : @""];
     }
-    return timedLines(starts, texts);
+    return SGKaraokeEstimatedLines(starts, texts);
 }
 
 NSArray<SGKaraokeLine *> *SGKaraokeLinesFromBody(NSData *body) {

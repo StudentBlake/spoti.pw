@@ -3,7 +3,7 @@
 // part's glass, hide switches and flags (Navbar, Player, Home & Library), Premium, ads & privacy
 // and Labs, All flags, a searchable list of every flag with an override per flag, and Mod, the
 // build, its updates and links. The same row leads the side drawer's list (trees/test6.txt), above
-// Your plan, so the page is a tap from Home. The tweaks read the switches when they run, so a change
+// Your plan, so the page is a tap from Home, and holding Home on the tab bar opens it too. The tweaks read the switches when they run, so a change
 // shows after Spotify restarts; the tab editor on the Navbar page applies as soon as the bar lays
 // out again.
 //
@@ -127,6 +127,17 @@ static UINavigationController *navigationIn(UIViewController *page) {
 }
 
 @end
+
+// The tab bar's controller holds no stack itself; the selected tab's sits among its parent's children.
+void SGOpenModSettings(UIView *source) {
+    UIViewController *owner = nil;
+    for (UIResponder *r = source; r && !owner; r = r.nextResponder) {
+        if ([r isKindOfClass:UIViewController.class]) owner = (UIViewController *)r;
+    }
+    UINavigationController *nav = nil;
+    for (UIViewController *page = owner; page && !nav; page = page.parentViewController) nav = navigationIn(page);
+    SGShowPage(nav.topViewController ?: SGTopController(), modSettingsPage());
+}
 
 // At the end of the settings list, or above the first row of the drawer's, with the inset for it
 // added again whenever Spotify resets the inset.

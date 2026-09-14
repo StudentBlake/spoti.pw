@@ -3,13 +3,16 @@
 // before they render (AdHubs.x, Feeds.m) and answers the requests behind them empty (AdNetwork.x).
 // Hide upsells drops the Premium prompts (AdPopups.x, AdServices.x) and forces the flags that show
 // them off (AdBlock.m, through Flags.x). Spoof Premium rewrites the product state and remote
-// config as they arrive (Premium.m) and keeps the session alive when the server disagrees
-// (AdNetwork.x).
+// config as they arrive (Premium.m), crossfade and automix included (Crossfade.x), and keeps the
+// session alive when the server disagrees (AdNetwork.x). The two Search switches force their flags
+// off (AdBlock.m, through Flags.x).
 #import <UIKit/UIKit.h>
 
 #define SGKeyHideAds @"spotifyglass.adblock.ads"
 #define SGKeyHideUpsells @"spotifyglass.adblock.upsells"
 #define SGKeyFakePremium @"spotifyglass.adblock.premium"
+#define SGKeyHideSearchVideos @"spotifyglass.adblock.searchVideos"
+#define SGKeyHideSocialProof @"spotifyglass.adblock.socialProof"
 
 // What a switch turning Spoof Premium on is told first.
 extern NSString *const SGFakePremiumWarning;

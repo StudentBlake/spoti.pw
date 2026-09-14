@@ -55,6 +55,8 @@ UIViewController *SGAdsSettingsPage(void) {
         SGNotedSection(@"Ads", @[
             SGWithSymbol(SGOptionRow(@"Hide ads", @"The ad services never start, ad components leave Home and Search before they render, and the requests behind them are answered empty", SGKeyHideAds), @"speaker.slash"),
             SGWithSymbol(SGOptionRow(@"Hide upsells", @"Premium prompts, banners and sheets dropped, and the flags that show them forced off", SGKeyHideUpsells), @"hand.raised"),
+            SGWithSymbol(SGOptionRow(@"Hide the video carousel in Search", nil, SGKeyHideSearchVideos), @"play.rectangle.on.rectangle"),
+            SGWithSymbol(SGOptionRow(@"Hide social proof in Search", nil, SGKeyHideSocialProof), @"person.2"),
             SGWithSymbol(SGPageRow(@"Ad and upsell flags", ^UIViewController *{ return adFlagsPage(); }), @"flag"),
         ], @"From EeveeSpotify, off until switched on. They reach only what is drawn; audio ads between songs are Spoof Premium's to stop."),
         SGNotedSection(@"Premium", @[

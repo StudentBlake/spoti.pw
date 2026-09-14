@@ -100,6 +100,13 @@ typedef NS_ENUM(NSInteger, SGRuleKind) { SGRuleRemove, SGRuleSet, SGRuleForce, S
 typedef struct { const char *scope, *name; SGRuleKind kind; BOOL on; const char *text; } SGRule;
 
 static const SGRule rules[] = {
+    // The ios-feature-settings flags only draw the rows; the player core gates each on its own scope.
+    {"ios-feature-settings", "crossfade_enabled", SGRuleForce, YES, NULL},
+    {"ios-feature-settings", "automix_enabled", SGRuleForce, YES, NULL},
+    {"core-playback-setup", "crossfade_enabled", SGRuleForce, YES, NULL},
+    {"core-automix", "automix_enabled", SGRuleForce, YES, NULL},
+    {"ios-feature-settings", "use_playback_settings_crossfade", SGRuleForce, NO, NULL},
+    {"ios-feature-settings", "use_playback_settings_gapless", SGRuleForce, NO, NULL},
     {NULL, "enable_common_capping", SGRuleRemove, NO, NULL},
     {NULL, "enable_pns_common_capping", SGRuleRemove, NO, NULL},
     {NULL, "enable_pick_and_shuffle_common_capping", SGRuleRemove, NO, NULL},
@@ -271,9 +278,9 @@ static const SGRule rules[] = {
     {NULL, "is_ad_on_app_open_enabled", SGRuleSet, NO, NULL},
     {NULL, "ad_on_app_open_enabled", SGRuleSet, NO, NULL},
     {NULL, "adonappopen_enabled", SGRuleSet, NO, NULL},
-    {NULL, "marquee", SGRuleRemove, NO, NULL},
+    {"marquee", NULL, SGRuleRemove, NO, NULL},
     {"ios-feature-marquee", NULL, SGRuleRemove, NO, NULL},
-    {NULL, "leavebehindadsbase", SGRuleRemove, NO, NULL},
+    {"leavebehindadsbase", NULL, SGRuleRemove, NO, NULL},
     {"ios-feature-leavebehindadsbase", NULL, SGRuleRemove, NO, NULL},
     {"ios-nowplaying-scroll-impl", "unified_leavebehind_npv_scroll_music_enabled", SGRuleForce, NO, NULL},
     {"ios-nowplaying-scroll-impl", "unified_leavebehind_npv_scroll_podcast_enabled", SGRuleForce, NO, NULL},
@@ -334,6 +341,7 @@ static const SGRule rules[] = {
     {NULL, "enable_video_ads_player_v2", SGRuleSet, NO, NULL},
     {NULL, "enable_sponsored_search_results_v2", SGRuleSet, NO, NULL},
     {NULL, "enable_sponsored_home_results_v2", SGRuleSet, NO, NULL},
+    {"ios-feature-search", "prompted_playlist_merchandizing_enabled", SGRuleSet, NO, NULL},
     {NULL, "should_nova_scroll_use_scrollsita", SGRuleRemove, NO, NULL},
     {"ios-sociallistening-configuration-impl", "premium_gated_start_jam_buttons_enabled", SGRuleForce, NO, NULL},
 };

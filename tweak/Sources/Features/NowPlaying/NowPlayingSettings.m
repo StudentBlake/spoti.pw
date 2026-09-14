@@ -6,6 +6,7 @@
 #import "Features/ArtistBlock/ArtistBlock.h"
 #import "Features/Karaoke/Karaoke.h"
 #import "Features/LockScreenLyrics/LockScreenLyrics.h"
+#import "Features/Musixmatch/Musixmatch.h"
 
 static UIViewController *nowPlayingBarPage(void) {
     return [[SGModPage alloc] initWithTitle:@"Now playing bar" intro:SGRestartNote sections:@[
@@ -28,10 +29,15 @@ static UIViewController *nowPlayingBarPage(void) {
 static UIViewController *lyricsPage(void) {
     return [[SGModPage alloc] initWithTitle:@"Lyrics" intro:SGRestartNote sections:@[
         SGSection(nil, @[
-            SGOptionRow(@"Apple Music style", @"Word by word on the full screen page; timing inside a line is estimated", SGKeyKaraokeLyrics),
+            SGOptionRow(@"Apple Music style", @"Word by word on the full screen page; timing inside a line is estimated unless Musixmatch has it", SGKeyKaraokeLyrics),
             SGOptionRow(@"Glass lyrics", @"Glass card, and the page it expands into", SGKeyLyricsCard),
             SGOptionRow(@"Lyrics on the lock screen", @"The line being sung in place of the artist, also in the Dynamic Island, Control Center and CarPlay", SGKeyLockScreenLyrics),
         ]),
+        SGNotedSection(@"Musixmatch", @[
+            SGOptionRow(@"Lyrics from Musixmatch", @"In place of Spotify's, with the time of every word where Musixmatch has it", SGKeyMusixmatchLyrics),
+            SGOptionRow(@"Lyrics for every track", @"Offers the lyrics card on tracks Spotify has no lyrics for; needs Lyrics from Musixmatch", SGKeyMusixmatchAllTracks),
+            SGOptionRow(@"Word timing from NetEase", @"For Apple Music style when Musixmatch has none, as for most Eminem; needs Lyrics from Musixmatch", SGKeyNetEaseWordTiming),
+        ], @"Musixmatch is sent the track's id with an anonymous token, NetEase the title and artist; neither gets anything of your Spotify account."),
         SGSection(@"Hide in the player", @[
             SGHideRow(@"Lyrics card", @"The lyrics card below the player", SGHideLyricsCard),
             SGHideRow(@"Lyrics preview", @"The lyric lines shown under the artwork", SGHideLyricsInline),

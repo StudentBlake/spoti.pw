@@ -12,15 +12,18 @@
 #import "Core/SGCore.h"
 #import "Navbar.h"
 #import "Features/Appearance/Appearance.h"
+#import "Settings/SGPage.h"
 #import "Headers/SPTEncoreIconView.h"
 #import <objc/message.h>
 
 static char kBarKey;
 static __weak UIView *sg_stockBar;
 
-@interface SGSystemTabBar : UITabBar <UITabBarDelegate>
+@interface SGSystemTabBar : UITabBar <UITabBarDelegate, UIGestureRecognizerDelegate>
 @property (nonatomic, weak) UIView *stockBar;
 @property (nonatomic, copy) NSArray<UIView *> *sources;
+@property (nonatomic, weak) UILongPressGestureRecognizer *hold;
+@property (nonatomic) BOOL holding;
 @end
 
 static void syncBar(UIView *stockBar);
@@ -36,6 +39,11 @@ static NSArray<UIView *> *tabItems(UIView *tabBar) {
     return [items sortedArrayUsingComparator:^NSComparisonResult(UIView *a, UIView *b) {
         return [@(SGFrameIn(a, tabBar).origin.x) compare:@(SGFrameIn(b, tabBar).origin.x)];
     }];
+}
+
+// Navbar.x never reorders Spotify's row and appends the mod's own tabs after it, so Home stays first.
+static BOOL isHome(UIView *item, UIView *tabBar) {
+    return item && item == SGRowIn(tabBar).arrangedSubviews.firstObject;
 }
 
 static UILabel *labelIn(UIView *item) {
@@ -174,7 +182,8 @@ static void forwardTap(UIView *item) {
 - (void)tabBar:(UITabBar *)tabBar didSelectItem:(UITabBarItem *)item {
     NSUInteger index = [self.items indexOfObject:item];
     if (index == NSNotFound || index >= self.sources.count) return;
-    forwardTap(self.sources[index]);
+    // Home tapped while on Home pops Spotify's stack, which would take Mod Settings straight off it.
+    if (!self.holding) forwardTap(self.sources[index]);
     // Spotify repaints its labels a moment later; a tap it did not take snaps the selection back.
     UIView *stockBar = self.stockBar;
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.25 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
@@ -182,7 +191,68 @@ static void forwardTap(UIView *item) {
     });
 }
 
+// UIKit's item views are private, so the item under a touch is the one whose title label is nearest.
+- (UITabBarItem *)itemAt:(CGPoint)point {
+    __block UITabBarItem *nearest = nil;
+    __block CGFloat best = CGFLOAT_MAX;
+    SGForEachView(self, ^(UIView *v) {
+        if (![v isKindOfClass:UILabel.class] || v.bounds.size.width < 1) return;
+        CGFloat distance = fabs([v convertPoint:CGPointMake(CGRectGetMidX(v.bounds), 0) toView:self].x - point.x);
+        if (distance >= best) return;
+        for (UITabBarItem *item in self.items) {
+            if (![((UILabel *)v).text isEqualToString:item.title]) continue;
+            best = distance;
+            nearest = item;
+            break;
+        }
+    });
+    return nearest;
+}
+
+// UIView asks itself this for its own recognizers too, so only the hold is answered here.
+- (BOOL)gestureRecognizerShouldBegin:(UIGestureRecognizer *)recognizer {
+    if (recognizer != self.hold) return [super gestureRecognizerShouldBegin:recognizer];
+    NSUInteger index = [self.items indexOfObject:[self itemAt:[recognizer locationInView:self]]];
+    return index < self.sources.count && isHome(self.sources[index], self.stockBar);
+}
+
+- (BOOL)gestureRecognizer:(UIGestureRecognizer *)recognizer shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)other {
+    return YES;
+}
+
+- (void)held:(UILongPressGestureRecognizer *)hold {
+    if (hold.state == UIGestureRecognizerStateBegan) {
+        self.holding = YES;
+        SGOpenModSettings(self);
+    } else if (hold.state != UIGestureRecognizerStateChanged) {
+        // The bar may still pick Home as the finger lifts, after this.
+        __weak typeof(self) weakSelf = self;
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.3 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            weakSelf.holding = NO;
+        });
+    }
+}
+
 @end
+
+@interface SGHomeHold : UILongPressGestureRecognizer
+@end
+
+@implementation SGHomeHold
++ (void)held:(SGHomeHold *)hold {
+    if (hold.state == UIGestureRecognizerStateBegan) SGOpenModSettings(hold.view);
+}
+@end
+
+// On Spotify's own bar a hold that begins fails the item's tap recognizer, so Home is not tapped too.
+static void holdHome(UIView *stockBar) {
+    UIView *home = SGRowIn(stockBar).arrangedSubviews.firstObject;
+    if (!home) return;
+    for (UIGestureRecognizer *recognizer in home.gestureRecognizers) {
+        if ([recognizer isKindOfClass:SGHomeHold.class]) return;
+    }
+    [home addGestureRecognizer:[[SGHomeHold alloc] initWithTarget:SGHomeHold.class action:@selector(held:)]];
+}
 
 static void removeBar(UIView *stockBar) {
     UIView *bar = objc_getAssociatedObject(stockBar, &kBarKey);
@@ -216,6 +286,10 @@ static void syncBar(UIView *stockBar) {
         bar = [[SGSystemTabBar alloc] initWithFrame:stockBar.bounds];
         bar.delegate = bar;
         bar.stockBar = stockBar;
+        UILongPressGestureRecognizer *hold = [[UILongPressGestureRecognizer alloc] initWithTarget:bar action:@selector(held:)];
+        hold.delegate = bar;
+        [bar addGestureRecognizer:hold];
+        bar.hold = hold;
         objc_setAssociatedObject(stockBar, &kBarKey, bar, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     }
     bar.tintColor = SGAccentColor() ?: [UIColor colorWithRed:0x1E / 255.0 green:0xD7 / 255.0 blue:0x60 / 255.0 alpha:1];
@@ -292,6 +366,7 @@ static UIView *tabBarOf(UIView *item) {
     for (UIView *sub in ((UIView *)self).subviews) {
         if (![sub isKindOfClass:SGSystemTabBar.class]) [sub layoutIfNeeded];
     }
+    holdHome((UIView *)self);
     syncBar((UIView *)self);
     SGLogTabBarRow((UIView *)self);
 }
@@ -302,6 +377,7 @@ static void itemDidLayOut(UIView *item) {
     UIView *bar = tabBarOf(item);
     if (!bar) return;
     SGComposeTabBar(bar);
+    holdHome(bar);
     syncBar(bar);
     SGLogTabBarRow(bar);
 }

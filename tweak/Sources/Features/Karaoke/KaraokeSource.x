@@ -2,9 +2,11 @@
 // the same URLSession delegates AdBlock/AdNetwork.x reads, untouched, and kept per track, since the
 // page may open long after the request finished. The clock is SPTEsperantoPlayer's state, asked for on
 // every frame: the player is caught the first time the app asks it, and its position runs on by itself.
+// With Musixmatch on, the color-lyrics body is Features/Musixmatch's to answer and it hands the lines over.
 #import "Core/SGCore.h"
 #import "Karaoke.h"
 #import "Features/LockScreenLyrics/LockScreenLyrics.h"
+#import "Features/Musixmatch/Musixmatch.h"
 #import "Headers/SPTPlayer.h"
 
 static const NSUInteger kKeptTracks = 40;
@@ -15,6 +17,7 @@ static NSMutableDictionary<NSString *, NSArray<SGKaraokeLine *> *> *sg_lyrics;
 static NSMutableSet<NSString *> *sg_requested;
 static NSDictionary<NSString *, NSString *> *sg_spclientHeaders;
 static __weak id sg_player;
+static BOOL sg_musixmatch;
 static char kBodyKey;
 
 static NSString *trackInURL(NSURL *url) {
@@ -43,7 +46,7 @@ static void rememberHeaders(NSURLSession *session, NSURLRequest *request) {
     dispatch_async(dispatch_get_main_queue(), ^{ sg_spclientHeaders = headers; });
 }
 
-static void keep(NSString *track, NSArray<SGKaraokeLine *> *lines) {
+void SGKaraokeKeepLines(NSString *track, NSArray<SGKaraokeLine *> *lines) {
     dispatch_async(dispatch_get_main_queue(), ^{
         if (sg_lyrics.count >= kKeptTracks) [sg_lyrics removeAllObjects];
         sg_lyrics[track] = lines;
@@ -52,7 +55,7 @@ static void keep(NSString *track, NSArray<SGKaraokeLine *> *lines) {
 
 static void received(NSURLSession *session, NSURLSessionTask *task, NSData *data) {
     rememberHeaders(session, task.currentRequest);
-    if (!trackInURL(task.currentRequest.URL)) return;
+    if (sg_musixmatch || !trackInURL(task.currentRequest.URL)) return;
     NSMutableData *body = objc_getAssociatedObject(task, &kBodyKey);
     if (!body) objc_setAssociatedObject(task, &kBodyKey, (body = [NSMutableData data]), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     [body appendData:data];
@@ -62,7 +65,7 @@ static void completed(NSURLSessionTask *task, NSError *error) {
     NSMutableData *body = objc_getAssociatedObject(task, &kBodyKey);
     if (!body) {
         NSString *path = task.currentRequest.URL.path;
-        if ([path.lowercaseString containsString:@"lyrics"]) SGLog(@"karaoke: lyrics request not read: %@ (error %@)", path, error);
+        if (!sg_musixmatch && [path.lowercaseString containsString:@"lyrics"]) SGLog(@"karaoke: lyrics request not read: %@ (error %@)", path, error);
         return;
     }
     objc_setAssociatedObject(task, &kBodyKey, nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
@@ -70,15 +73,14 @@ static void completed(NSURLSessionTask *task, NSError *error) {
     if (error || !track) return;
     NSArray<SGKaraokeLine *> *lines = SGKaraokeLinesFromBody(body);
     SGLog(@"karaoke: lyrics for %@, %lu bytes, %lu synced lines", track, (unsigned long)body.length, (unsigned long)lines.count);
-    if (lines) keep(track, lines);
+    if (lines) SGKaraokeKeepLines(track, lines);
 }
 
 NSArray<SGKaraokeLine *> *SGKaraokeLinesForTrack(NSString *trackID) {
     return trackID ? sg_lyrics[trackID] : nil;
 }
 
-void SGKaraokeRequestLyrics(NSString *trackID) {
-    if (!trackID || sg_lyrics[trackID] || [sg_requested containsObject:trackID]) return;
+static void requestFromSpotify(NSString *trackID) {
     NSDictionary<NSString *, NSString *> *headers = sg_spclientHeaders;
     if (!headers) return;
     [sg_requested addObject:trackID];
@@ -92,8 +94,25 @@ void SGKaraokeRequestLyrics(NSString *trackID) {
         NSArray<SGKaraokeLine *> *lines = SGKaraokeLinesFromBody(body);
         SGLog(@"karaoke: fetched lyrics for %@: status %ld, %lu synced lines, error %@", trackID,
               (long)[(NSHTTPURLResponse *)response statusCode], (unsigned long)lines.count, error);
-        if (lines) keep(trackID, lines);
+        if (lines) SGKaraokeKeepLines(trackID, lines);
     }] resume];
+}
+
+void SGKaraokeRequestLyrics(NSString *trackID) {
+    if (!trackID || sg_lyrics[trackID] || [sg_requested containsObject:trackID]) return;
+    if (!sg_musixmatch) {
+        requestFromSpotify(trackID);
+        return;
+    }
+    [sg_requested addObject:trackID];
+    SGMusixmatchFetch(trackID, ^(SGMusixmatchLyrics *lyrics) {
+        if (lyrics.karaokeLines) {
+            SGKaraokeKeepLines(trackID, lyrics.karaokeLines);
+            return;
+        }
+        [sg_requested removeObject:trackID];
+        requestFromSpotify(trackID);
+    });
 }
 
 id SGKaraokePlayer(void) {
@@ -156,6 +175,7 @@ void SGKaraokeSeek(NSInteger ms) {
     if (!SGFlag(SGKeyKaraokeLyrics, NO) && !SGFlag(SGKeyLockScreenLyrics, NO)) return;
     sg_lyrics = [NSMutableDictionary dictionary];
     sg_requested = [NSMutableSet set];
+    sg_musixmatch = SGFlag(SGKeyMusixmatchLyrics, NO);
     %init;
     SGLog(@"karaoke: on");
     SGRequireClasses(@[

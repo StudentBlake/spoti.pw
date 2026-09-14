@@ -42,10 +42,14 @@ app:
     Privacy/      telemetry blocking and its counters
     AdBlock/      EeveeSpotify's ad blocking: the ad and upsell services silenced (AdServices.x), ad components out of the
                   Hub JSON (AdHubs.x) and the feeds (Feeds.m), Premium pop-ups dropped (AdPopups.x), and the responses
-                  rewritten on the way in (AdNetwork.x, Premium.m over the protobuf walker in Protobuf.m)
+                  rewritten on the way in (AdNetwork.x, Premium.m over the protobuf walker in Protobuf.m), with crossfade
+                  and automix switched on in the player core and crossfade's switch kept in step with its slider (Crossfade.x)
     ArtistBlock/  tracks by blocked artists skipped as they start (ArtistSkip.x), the list and the Blocked artists page under Player
     Karaoke/      Apple Music style lyrics on the full screen page: lines read from color-lyrics and the player's clock (KaraokeSource.x),
                   words timed by estimate inside Spotify's line times (KaraokeTiming.m), drawn by KaraokeView.m over the page (KaraokePage.x)
+    Musixmatch/   lyrics from Musixmatch with an anonymous token (Musixmatch.m), word timed where it has richsync; color-lyrics
+                  answered with them and has_lyrics forced for every track (MusixmatchLyrics.x); word timing from NetEase's yrc
+                  for the karaoke page when Musixmatch has none (NetEase.m); rows on the Lyrics page
     Onboarding/   the welcome tour over Home on the first launch (Onboarding.x, the pages in Tour.m), offered again from the Mod page
     About/        the update check and the Mod page: the build, its updates, the links and the reset
 
@@ -69,22 +73,24 @@ out again, as are the Home gradient's colour, strength and height, but not the s
 
 ## Mod Settings
 
-Mod Settings, the first row of the side drawer and the last row of Spotify's Settings, sorts every
+Mod Settings, opened by holding Home on the tab bar or from the first row of the side drawer and the
+last row of Spotify's Settings, sorts every
 setting by the part of Spotify it changes, so a part's glass, its hide switches and its flags sit on
 one page, the mod's own rows first and Spotify's flags below them or on a sub page named after what
 they change. It opens on the Appearance card, the three switches that style the whole app: Liquid
 Glass UI, AMOLED and the accent colour (Spotify's green is offered from the colour row once a colour
 is set). Then a card of parts. Navbar: the glass tab bar and search field, then the tab editor.
-Player: Gestures, Lyrics (Apple Music style, glass lyrics, hiding the lyrics card and preview, the
-lyrics flags), Blocked artists (with the count on the row) and Now playing bar (its glass, its device
+Player: Gestures, Lyrics (Apple Music style, glass lyrics, lyrics from Musixmatch and for every track,
+hiding the lyrics card and preview, the lyrics flags), Blocked artists (with the count on the row) and Now playing bar (its glass, its device
 button and its flags) as pages; then the player screen (artwork background, glass header buttons,
 Disable Canvas and the sheet, header, slider and sticky header flags), the cards under the player and
 the player buttons to hide, and Queue & devices and Lock screen widget as flag pages. Home & Library:
 the Gradient page (the wash behind the top of Home in one of eight colours, at three strengths and
 four heights) and the Home flags, the parts of Home to hide including the DJ button and badge, the
 playlist header, buttons and pills to hide, and the Library flags. Then Premium, ads & privacy
-(EeveeSpotify's Hide ads and Hide upsells with an Ad and upsell flags page under them, every switch
-there forcing a flag Spotify ships on to off; Spoof Premium; Block telemetry; then what the ad
+(EeveeSpotify's Hide ads and Hide upsells, hiding the video carousel and social proof in Search, and
+an Ad and upsell flags page under them, every switch there forcing a flag Spotify ships on to off;
+Spoof Premium; Block telemetry; then what the ad
 blocking and the telemetry blocking have stopped) and Labs (features Spotify built and did not ship,
 AI Chat (Martini) first). Last, All flags, Spotify's remote-config flags with a search field and an
 Auto / Off / On control per flag (a text field for the number and text ones), and Mod: the update

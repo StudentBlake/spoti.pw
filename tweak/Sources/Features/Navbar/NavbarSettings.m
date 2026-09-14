@@ -164,8 +164,8 @@ typedef NS_ENUM(NSInteger, SGNavbarSection) {
 
 static NSArray<NSArray<NSString *> *> *glassRows(void) {
     return @[
-        @[@"Glass tab bar", @"The system glass tab bar in place of Spotify's", SGKeyTabBar],
-        @[@"Glass search field", @"A glass capsule instead of the white field on Search", SGKeySearchField],
+        @[@"Glass tab bar", SGKeyTabBar],
+        @[@"Glass search field", SGKeySearchField],
     ];
 }
 
@@ -256,17 +256,17 @@ static NSArray<NSArray<NSString *> *> *glassRows(void) {
     switch (path.section) {
         case SGNavbarSectionGlass: {
             NSArray<NSString *> *row = glassRows()[(NSUInteger)path.row];
-            SGFillCell(cell, row[0], row[1], nil, nil);
+            SGFillCell(cell, row[0], nil, nil, nil);
             UISwitch *toggle = [UISwitch new];
             toggle.onTintColor = SGGreen();
-            toggle.on = SGFlag(row[2], NO);
+            toggle.on = SGFlag(row[1], NO);
             toggle.tag = path.row;
             [toggle addTarget:self action:@selector(glassToggled:) forControlEvents:UIControlEventValueChanged];
             cell.accessoryView = toggle;
             break;
         }
         case SGNavbarSectionSwitch: {
-            SGFillCell(cell, @"Custom navbar", @"Off leaves the bar exactly as Spotify built it", nil, nil);
+            SGFillCell(cell, @"Custom navbar", nil, nil, nil);
             UISwitch *toggle = [UISwitch new];
             toggle.onTintColor = SGGreen();
             toggle.on = SGEnabled(SGKeyNavbar);
@@ -346,7 +346,7 @@ static NSArray<NSArray<NSString *> *> *glassRows(void) {
 }
 
 - (void)glassToggled:(UISwitch *)toggle {
-    SGSetEnabled(glassRows()[(NSUInteger)toggle.tag][2], toggle.on);
+    SGSetEnabled(glassRows()[(NSUInteger)toggle.tag][1], toggle.on);
 }
 
 - (void)reset {

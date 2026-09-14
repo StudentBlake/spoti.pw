@@ -41,6 +41,11 @@ static void takeDown(UIView *view) {
 %hook _TtC20NativeAds_LoggerImpl26NativeAdsLoggerServiceImpl
 - (void)load { SGAdBlockCountOne(@"Ad services"); }
 %end
+// The leavebehind card among the player's scroll cards. It has no -load; its card is added the way
+// lyrics and credits add theirs, so it is kept off the list instead.
+%hook _TtC32AdsEmbedded_EmbeddedCTACardsImpl23EmbeddedCTACardsService
+- (void)registerScrollProviderIn:(id)registry { SGAdBlockCountOne(@"Ad services"); }
+%end
 
 %hook _TtC18AdsPlatform_ECMKit37AdsSponsoredPlaylistHeaderCentralView
 - (void)didMoveToSuperview {
@@ -100,6 +105,7 @@ static void takeDown(UIView *view) {
             @"_TtC48AdsEmbedded_AdsSponsoredContextNPBAttachmentImpl43AdsSponsoredContextNPBAttachmentServiceImpl",
             @"_TtC42AdsEmbedded_AdsSponsoredPlaylistHeaderImpl37AdsSponsoredPlaylistHeaderServiceImpl",
             @"_TtC20NativeAds_LoggerImpl26NativeAdsLoggerServiceImpl",
+            @"_TtC32AdsEmbedded_EmbeddedCTACardsImpl23EmbeddedCTACardsService",
             @"_TtC18AdsPlatform_ECMKit37AdsSponsoredPlaylistHeaderCentralView",
         ]);
     }
